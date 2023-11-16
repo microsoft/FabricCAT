@@ -1,0 +1,219 @@
+.execute database script  <|
+// =========================================================
+// Create Main table and mappings
+// =========================================================
+.create-merge table QueenOfTheSky (['time']:datetime, icao24:string, callsign:string, lat:real, lon:real, heading:long, ['geoaltitude _ft_']:long, velocity_kts_:long, ['vertrate _ft_min_']:string, onground:long, squawk:long, alert:string, spi:string, baroaltitude:string, lastposupdate:string, lastcontact:string, ['vertrate _ft_min__1']:long) with (folder = "Data.Gold") 
+.create-or-alter table QueenOfTheSky ingestion csv mapping 'QueenOfTheSky_mapping'
+```
+[{"Properties":{"Ordinal":"0"},"column":"time","datatype":""},{"Properties":{"Ordinal":"1"},"column":"icao24","datatype":""},{"Properties":{"Ordinal":"2"},"column":"callsign","datatype":""},{"Properties":{"Ordinal":"3"},"column":"lat","datatype":""},{"Properties":{"Ordinal":"4"},"column":"lon","datatype":""},{"Properties":{"Ordinal":"5"},"column":"heading","datatype":""},{"Properties":{"Ordinal":"6"},"column":"geoaltitude _ft_","datatype":""},{"Properties":{"Ordinal":"7"},"column":"velocity_kts_","datatype":""},{"Properties":{"Ordinal":"8"},"column":"vertrate _ft_min_","datatype":""},{"Properties":{"Ordinal":"9"},"column":"onground","datatype":""},{"Properties":{"Ordinal":"10"},"column":"squawk","datatype":""},{"Properties":{"Ordinal":"11"},"column":"alert","datatype":""},{"Properties":{"Ordinal":"12"},"column":"spi","datatype":""},{"Properties":{"Ordinal":"13"},"column":"baroaltitude","datatype":""},{"Properties":{"Ordinal":"14"},"column":"lastposupdate","datatype":""},{"Properties":{"Ordinal":"15"},"column":"lastcontact","datatype":""}]
+```
+.create-or-alter table QueenOfTheSky ingestion json mapping 'QueenOfTheSky_mapping'
+```
+[{"Properties":{"Path":"$['time']"},"column":"time","datatype":""},{"Properties":{"Path":"$['icao24']"},"column":"icao24","datatype":""},{"Properties":{"Path":"$['callsign']"},"column":"callsign","datatype":""},{"Properties":{"Path":"$['lat']"},"column":"lat","datatype":""},{"Properties":{"Path":"$['lon']"},"column":"lon","datatype":""},{"Properties":{"Path":"$['heading']"},"column":"heading","datatype":""},{"Properties":{"Path":"$['geoaltitude (ft)']"},"column":"geoaltitude _ft_","datatype":""},{"Properties":{"Path":"$['velocity(kts)']"},"column":"velocity_kts_","datatype":""},{"Properties":{"Path":"$['vertrate (ft/min)']"},"column":"vertrate _ft_min_","datatype":""},{"Properties":{"Path":"$['onground']"},"column":"onground","datatype":""},{"Properties":{"Path":"$['squawk']"},"column":"squawk","datatype":""}]
+```
+.create-or-alter table QueenOfTheSky ingestion json mapping 'QueenOfTheSky_mapping_1'
+```
+[{"Properties":{"Path":"$['time']"},"column":"time","datatype":""},{"Properties":{"Path":"$['icao24']"},"column":"icao24","datatype":""},{"Properties":{"Path":"$['callsign']"},"column":"callsign","datatype":""},{"Properties":{"Path":"$['lat']"},"column":"lat","datatype":""},{"Properties":{"Path":"$['lon']"},"column":"lon","datatype":""},{"Properties":{"Path":"$['heading']"},"column":"heading","datatype":""},{"Properties":{"Path":"$['geoaltitude (ft)']"},"column":"geoaltitude _ft_","datatype":""},{"Properties":{"Path":"$['velocity(kts)']"},"column":"velocity_kts_","datatype":""},{"Properties":{"Path":"$['onground']"},"column":"onground","datatype":""},{"Properties":{"Path":"$['squawk']"},"column":"squawk","datatype":""},{"Properties":{"Path":"$['vertrate (ft/min)']"},"column":"vertrate _ft_min__1","datatype":""}]
+```
+// =========================================================
+// Create Planned flight table
+// =========================================================
+.create-merge table QueenOfTheSkyPlanned (TimeStamp:datetime, rn:long, CallSign:string, lon:real, lat:real) with (folder = "Data.Gold") 
+// =========================================================
+// Create Functions
+// =========================================================
+.create-or-alter function with (skipvalidation = "true") GetFlightTelemetry() {
+let StuntStart_lon            = -120.256293;
+let StuntStart_lat            =   47.399596;
+let StuntEnd_lon              = -117.4727;
+let StuntEnd_lat              =   47.2288;
+let QoSBase = 
+    QueenOfTheSky
+    | where onground == false
+    | extend vertrate = tolong(['vertrate _ft_min_'])
+    ,TimeStamp = ['time']
+    ,CallSign = callsign
+    | project-away ['vertrate _ft_min_'], callsign, ['time']
+    | sort by TimeStamp asc 
+    | extend rn = row_number()
+;
+let StuntStartRn = 
+  toscalar(
+          QoSBase
+          | extend DistanceToStartPoint = round(geo_distance_2points(lon,lat,StuntStart_lon, StuntStart_lat),0)
+          | summarize arg_min(DistanceToStartPoint,CallSign,rn)
+          | project rn
+          );
+let MaxTs =  toscalar (QoSBase | summarize TimeStamp = max(TimeStamp) | project TimeStamp)   
+;
+let StuntEndRn = 
+  toscalar(
+          QoSBase
+          | extend DistanceToEndPoint = round(geo_distance_2points(lon,lat,StuntEnd_lon, StuntEnd_lat),0)
+          | summarize arg_min(DistanceToEndPoint,CallSign,rn)
+          | project rn 
+          ); 
+let QoSPatchPlanned=
+    QoSBase
+    | where rn between (StuntStartRn .. StuntEndRn )
+    | extend  lat = iif(rn between ((StuntStartRn+1) .. (StuntEndRn-1)), real(null), lat)
+             ,lon = iif(rn between ((StuntStartRn+1) .. (StuntEndRn-1)), real(null), lon)
+             ,MyHeadings = iif(rn between ((StuntStartRn+1) .. (StuntEndRn-1)), int(null), heading)
+    | make-series 
+        MyHeadings = max(MyHeadings) default= real(null)
+        ,lon = max(lon) default= real(null)
+        ,lat = max(lat) default= real(null)
+    on TimeStamp  
+    step 10s
+    by   CallSign          
+    | extend  
+             lon = series_fill_linear(lon)
+            ,lat = series_fill_linear(lat)
+            ,MyHeadings = series_fill_forward(MyHeadings)
+    | mv-expand 
+         TimeStamp to typeof(datetime )
+        ,MyHeadings to typeof(int)
+        ,lon to typeof(real)
+        ,lat to typeof(real)
+    | extend 
+        CallSign = '5Y747 Planned'
+;
+let QoSPlanned = 
+QoSBase //1750
+| where rn !between (StuntStartRn .. StuntEndRn) // 794 (956)
+| union
+QoSPatchPlanned // 988
+| sort by TimeStamp asc 
+| extend rn = row_number()
+    | extend 
+        CallSign = '5Y747 Planned'
+| project TimeStamp,rn, CallSign, lon, lat;
+QoSPlanned
+| union 
+QoSBase
+| where TimeStamp <= MaxTs
+| project TimeStamp,rn, CallSign, lon, lat
+| sort by CallSign, TimeStamp asc
+}
+// =========================================================
+.create-or-alter function with (skipvalidation = "true") DrawFlightPaths() {
+let maxts = toscalar(GetAllFlightTelemetry | summarize MaxTs = max(TimeStamp));
+GetFlightTelemetry
+| where CallSign == '5Y747' //1750
+| union (QueenOfTheSkyPlanned | where TimeStamp <= maxts) // == 3532
+| sort by CallSign, TimeStamp asc
+| extend lon = round(lon,4), lat = round(lat,4)
+| extend MyTupple = strcat(tostring(lon), " ",tostring(lat))
+| summarize MyFlightPath = make_list(MyTupple) by CallSign
+| extend MyFlightPath = strcat("LINESTRING ",replace_string(replace_string(replace_string(tostring(MyFlightPath),"[","("),"]",")"),'"',""))
+| extend tt = strlen(MyFlightPath)
+}
+// =========================================================
+.create-or-alter function with (skipvalidation = "true") CalculateCostOfStunt() {
+let B747FuelGallonsPerMiles   =    5        ;  // The fuel consumption of the B747
+let JetFuelPricePerGallon     =    6.35     ; // Today's jet fuel price
+let GramsOfCo2PerGallonBurned =    3.15   ;
+let maxts = toscalar(GetAllFlightTelemetry | summarize MaxTs = max(TimeStamp));
+GetFlightTelemetry
+| where CallSign == '5Y747' //1750
+| union (QueenOfTheSkyPlanned | where TimeStamp <= maxts) // == 3532
+| sort by CallSign, TimeStamp asc
+| extend lon = round(lon,4), lat = round(lat,4)
+| extend MyCoordinates = pack_array(round(lon,4), round(lat,4))
+| summarize MyCoordinatesList = make_list(pack_array(MyCoordinates)) by CallSign
+| sort by CallSign asc
+| extend MyFlightProperties = bag_pack("CallSign",CallSign)
+| extend MyFlightPath = bag_pack("coordinates",MyCoordinatesList,"type","LineString")
+// The next two columns are building a full geojson that can be viewed online, this is not needed other than showing pretty things
+// =========================================================================================
+| extend Myfeature = bag_pack("type","Feature","properties",MyFlightProperties,"geometry",MyFlightPath)
+| extend MyGeoJson = bag_pack("type","FeatureCollection","features",pack_array(Myfeature))
+// =========================================================================================
+| extend MyStringLength = geo_line_length(MyFlightPath) // get the line lenght in Meters
+| extend MyStringLengthMiles = round(convert_length(MyStringLength,'Meter','Mile'),0) // Convert to miles and round to the nearest integer
+| extend MyExtraMiles = MyStringLengthMiles - next(MyStringLengthMiles) // Comparing the distances using window function 
+| extend MyExtraFuel = MyExtraMiles * B747FuelGallonsPerMiles 
+| extend MyExtraFuelCost = MyExtraFuel * JetFuelPricePerGallon 
+| extend MyExtraKgOfCo2 = convert_mass((MyExtraFuel * GramsOfCo2PerGallonBurned),'Gram','Kilogram')
+| where CallSign == '5Y747' 
+| project 
+     CallSign
+    ,MyExtraMiles       = iif(MyExtraMiles > 0, MyExtraMiles,real(0))
+    ,MyExtraFuelGallons = iif(MyExtraMiles > 0, MyExtraFuel,real(0))
+    ,MyExtraFuelCostUSD = iif(MyExtraMiles > 0, MyExtraFuelCost,real(0))
+    ,MyExtraKgOfCo2     = iif(MyExtraMiles > 0, MyExtraKgOfCo2,real(0))
+}
+// =========================================================
+.create-or-alter function with (skipvalidation = "true") GetAllFlightTelemetry() {
+let StuntStart_lon            = -120.256293;
+let StuntStart_lat            =   47.399596;
+let StuntEnd_lon              = -117.4727;
+let StuntEnd_lat              =   47.2288;
+let QoSBase = 
+    QueenOfTheSky
+    | where onground == false
+    | extend vertrate = tolong(['vertrate _ft_min_'])
+    ,TimeStamp = ['time']
+    ,CallSign = callsign
+    | project-away ['vertrate _ft_min_'], callsign, ['time']
+    | sort by TimeStamp asc 
+    | extend rn = row_number()
+;
+let StuntStartRn = 
+  toscalar(
+          QoSBase
+          | extend DistanceToStartPoint = round(geo_distance_2points(lon,lat,StuntStart_lon, StuntStart_lat),0)
+          | summarize arg_min(DistanceToStartPoint,CallSign,rn)
+          | project rn
+          );
+let MaxTs =  toscalar (QoSBase | summarize TimeStamp = max(TimeStamp) | project TimeStamp)   
+;
+let StuntEndRn = 
+  toscalar(
+          QoSBase
+          | extend DistanceToEndPoint = round(geo_distance_2points(lon,lat,StuntEnd_lon, StuntEnd_lat),0)
+          | summarize arg_min(DistanceToEndPoint,CallSign,rn)
+          | project rn 
+          ); 
+let QoSPatchPlanned=
+    QoSBase
+    | where rn between (StuntStartRn .. StuntEndRn )
+    | extend  lat = iif(rn between ((StuntStartRn+1) .. (StuntEndRn-1)), real(null), lat)
+             ,lon = iif(rn between ((StuntStartRn+1) .. (StuntEndRn-1)), real(null), lon)
+             ,MyHeadings = iif(rn between ((StuntStartRn+1) .. (StuntEndRn-1)), int(null), heading)
+    | make-series 
+        MyHeadings = max(MyHeadings) default= real(null)
+        ,lon = max(lon) default= real(null)
+        ,lat = max(lat) default= real(null)
+    on TimeStamp  
+    step 10s
+    by   CallSign          
+    | extend  
+             lon = series_fill_linear(lon)
+            ,lat = series_fill_linear(lat)
+            ,MyHeadings = series_fill_forward(MyHeadings)
+    | mv-expand 
+         TimeStamp to typeof(datetime )
+        ,MyHeadings to typeof(int)
+        ,lon to typeof(real)
+        ,lat to typeof(real)
+    | extend 
+        CallSign = '5Y747 Planned'
+;
+let QoSPlanned = 
+QoSBase //1750
+| where rn !between (StuntStartRn .. StuntEndRn) // 794 (956)
+| union
+QoSPatchPlanned // 988
+| sort by TimeStamp asc 
+| extend rn = row_number()
+    | extend 
+        CallSign = '5Y747 Planned'
+| project TimeStamp,rn, CallSign, lon, lat;
+QoSPlanned
+| union 
+QoSBase
+| where TimeStamp <= MaxTs
+| project TimeStamp,rn, CallSign, lon, lat
+| sort by CallSign, TimeStamp asc
+}
