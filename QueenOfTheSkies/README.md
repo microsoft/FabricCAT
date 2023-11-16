@@ -6,25 +6,25 @@ On February 1st, 2023, something very special happened in Everett, WA. Atlas Air
 
 ## Table of content
 
-- Prepare a text file for your important parameters
-- Create a KQL database and KQL Queryset
-   - Run the database preparation script
-   - Ingest the sample file
-   - Rehydrate the planned flight table
-   - Prepare for the first run
-- Create a Lakehouse
-- Upload the notebook
-   - Run the notebook and confirm the data is streaming
-- Create the event stream
-   - Create a custom app source
-   - Create a KQL database destination
-      - Complete the data mapping
-- Generate the report using the Power BI report template
-- Run the demo
-   - Prepare the landing table
-   - Run the preflight check
-   - Start the notebook
-   - Run the report
+- [Prepare a text file for your important parameters](#prepare-a-text-file-for-your-important-parameters)
+- [Create a KQL database and KQL Queryset](#create-a-kql-database-and-kql-queryset)
+   - [Run the database preparation script](#run-the-database-preparation-script)
+   - [Ingest the sample file](#ingest-the-sample-file)
+   - [Rehydrate the planned flight table](#rehydrate-the-planned-flight-table)
+   - [Prepare for the first run](#prepare-for-the-first-run)
+- [Create a Lakehouse](#create-a-lakehouse)
+- [Upload the notebook](#upload-the-notebook)
+   - [Run the notebook and confirm the data is streaming](#run-the-notebook-and-confirm-the-data-is-streaming)
+- [Create the event stream](#create-the-event-stream)
+   - [Create a custom app source](#create-a-custom-app-source)
+   - [Create a KQL database destination](#create-a-kql-database-destination)
+      - [Complete the data mapping](#complete-the-data-mapping)
+- [Build the Power BI report](#build-the-power-bi-report)
+- [Run the demo](#run-the-demo)
+   - [Prepare the landing table](#prepare-the-landing-table)
+   - [Run the preflight check](#run-the-preflight-check)
+   - [Start the notebook](#start-the-notebook)
+   - [Run the report](#run-the-report)
 
 ## Prepare a text file for your important parameters
 We will need to capture many parameters that will ne needed later in this project. We will ask you to save this in a text file as you follow along.
