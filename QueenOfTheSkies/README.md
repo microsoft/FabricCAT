@@ -46,7 +46,7 @@ We will need to capture many parameters that will ne needed later in this projec
    1. Name your first tab ***QoS DDL***
    1. Name your second tab ***QoS Planned***
    1. Name your third tab ***QosDemo control***
-1. From this repo copy and paste the content of the KQL scripts found in [the repo](/Code/KQL/) to their corresponding tabs in the KQL Queryset
+1. From this repo copy and paste the content of the KQL scripts found in [the repo](./Code/KQL/) to their corresponding tabs in the KQL Queryset
 
 ### Run the database preparation script
 
@@ -96,7 +96,7 @@ The next steps will create the lakehouse where we will host the sample file and 
 
 ## Upload the notebook
 
-1. Download the [***QueenOfTheSkies_Notebook.jpynb***](/Code/Notebooks/QueenOfTheSkies_Nb.ipynb) file from this repo and save it to your local machine
+1. Download the [***QueenOfTheSkies_Nb.jpynb***](/Code/Notebooks/QueenOfTheSkies_Nb.ipynb) file from this repo and save it to your local machine
 1. Navigate back to the ***Data engineering landing page*** by using the experience picker at the bottom left corner of the screen.
 1. Click the ***Import Notebook*** button and click the ***Upload*** button
 1. Navigate to your local file system where you saved the notebook file and hit ***Open***
@@ -118,7 +118,7 @@ The next steps will create the lakehouse where we will host the sample file and 
 
 ### Insert the variables in the notebook
 
-1. Navigate back to the ***ueenOfTheSkies_Notebook*** you uploaded earlier
+1. Navigate back to the ***ueenOfTheSkies_Nb*** you uploaded earlier
 1. In the cell at the top you will find the ***MyConnectionString*** variable that should be populated with the Custom app endpoint you created ealier and saved to your param file.
 1. Next is the ***SampleCsv*** variable that you should populate with the Sample file ABFS path that you captured earlier.
 
@@ -126,7 +126,7 @@ The next steps will create the lakehouse where we will host the sample file and 
 
 We will now be ready to run the notebook and stream the data to event stream. You may remember that we created a source but no destination. The reason is simple, we have no data in the pipe yet and the KQL db destination of event stream has to see some of it to allow its creation. So we will stream it now but let's remember that this will be an incomplete stream and we'll have to do it all again later.
 
-1. Navigate back to the ***ueenOfTheSkies_Notebook*** 
+1. Navigate back to the ***ueenOfTheSkies_Nb*** 
 1. Click ***Run all*** at the top.
 1. Allow for the spark session to spin up and watch for logs at the bottom that will indicate that the stream has started. you should be seeing messages like this: *This was batch #:136
 We loaded rows from: 1620 to row: 1632
@@ -175,7 +175,7 @@ Now you must complete the data mapping.
 1. The result should be a *All set! Clear for takeoff* message
 
 ### Start the notebook
-1. Navigate back to the ***QueenOfTheSkies_Notebook***
+1. Navigate back to the ***QueenOfTheSkies_Nb***
 1. Click ***Run all*** 
 1. Wait for the Logs at the bottom to show data streaming
 
