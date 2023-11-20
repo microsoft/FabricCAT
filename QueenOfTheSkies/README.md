@@ -29,6 +29,8 @@ On February 1st, 2023, something very special happened in Everett, WA. Atlas Air
 ## Prepare a text file for your important parameters
 We will need to capture many parameters that will ne needed later in this project. We will ask you to save this in a text file as you follow along.
 
+[^ Table of content ^](#table-of-content)
+
 ## Create a KQL database and KQL Queryset
 
 1. Ensure you asre in the real time analytics experience by clicking the experience picker in the lower left corner and selecting Real-Time Analytics
@@ -72,6 +74,8 @@ We now will ingest the full flight path all at once. We do this so we can use th
 
 The next steps will create the lakehouse where we will host the sample file and create the artefacts we need to simulate the stream
 
+[^ Table of content ^](#table-of-content)
+
 ## Create a Lakehouse
 1. In the Fabric experience picker at the bottom left of the screen, select ***Data Engineering***
 1. Click the ***New** drop down menu and select ***LakeHouse***
@@ -88,12 +92,16 @@ The next steps will create the lakehouse where we will host the sample file and 
 1. Use the copy button next to the ***ABFS filepath**
 1. **Paste the ABFS path to your to your Param file.**
 
+[^ Table of content ^](#table-of-content)
+
 ## Upload the notebook
 
 1. Download the [***QueenOfTheSkies_Notebook.jpynb***](/Code/Notebooks/QueenOfTheSkies_Nb.ipynb) file from this repo and save it to your local machine
 1. Navigate back to the ***Data engineering landing page*** by using the experience picker at the bottom left corner of the screen.
 1. Click the ***Import Notebook*** button and click the ***Upload*** button
 1. Navigate to your local file system where you saved the notebook file and hit ***Open***
+
+[^ Table of content ^](#table-of-content)
 
 ## Create the event stream
 
@@ -146,6 +154,8 @@ Now you must complete the data mapping.
 
 **Congratulation!** you are now able to stream any CSV file to a KQL database!
 
+[^ Table of content ^](#table-of-content)
+
 ## Build the Power BI report
 
 1. Download the Power BI template document (.PBIT) from the repo here and ***Save it to your local drive***
@@ -155,13 +165,25 @@ Now you must complete the data mapping.
    1. ***MyDatabaseName*** is the name you chose originally for the database.
 1. Click ***Load*** and allow the report to connect and load data
 1. It may require you to sign in to authenticate if not done already
+1. ***Publish the report*** to your workspace
 
+[^ Table of content ^](#table-of-content)
 ## Run the demo
-
-### Prepare the landing table
-
-### Run the preflight check
+1. Navigate back to the ***QoS_KQS*** KQL Query Set and to the ***QoS_DemoControl*** tab
+1. Run the Clear table command to clean up the landing table
+1. Run the ***Pre flight query** (see below) 
+1. The result should be a *All set! Clear for takeoff* message
 
 ### Start the notebook
+1. Navigate back to the ***QueenOfTheSkies_Notebook***
+1. Click ***Run all*** 
+1. Wait for the Logs at the bottom to show data streaming
 
 ### Run the report
+1. Navigate to the ***QueenOfTheSky_rpt*** power BI report
+1. To set the tone, read the text from the landing page
+1. Then navigate to the second page to see the flight path. Note that until you start refreshing the path will not change. Don't wait too long or else the punchline will be spoiled
+
+[^ Table of content ^](#table-of-content)
+
+That's it folks! Enjoy running the demo and spread the word!
