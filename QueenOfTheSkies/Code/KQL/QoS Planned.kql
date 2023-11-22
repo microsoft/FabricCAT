@@ -1,0 +1,8 @@
+// ==============================================================================================
+// == This REQUIRES a full stream to have occured lease check that the count of QueenOfTheSky table = 17 ==
+// == Showing the cool Parse-kv operator simply because it's cool! ==============================
+// ==============================================================================================
+
+.set-or-append QueenOfTheSkyPlanned <|
+GetFlightTelemetry
+| where CallSign == '5Y747 Planned'

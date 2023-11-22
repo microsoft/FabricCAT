@@ -1,0 +1,35 @@
+// ==============================================================================================
+// == 0 - Run the PreFlight checks. Do not run the notebook until you get a clear for takeoff! ==
+// == Showing the cool Parse-kv operator simply because it's cool! ==============================
+// ==============================================================================================
+print MyTowerClearance = case(
+                                 toscalar(QueenOfTheSkyPlanned | count) != 1782 
+                                    ,'MessageId=601:Severity=Error:MessageText=Permission Denied, Flight plan is incorrect, please clear and re-hydrate QoSPlannedNormalized' 
+                                ,toscalar(QueenOfTheSky | count) > 0            
+                                    ,'MessageId=602:Severity=Error:MessageText=Permission Denied, Data stream already occured, please clear the QueenOfTheSky table'
+                                ,toscalar(QueenOfTheSkyPlanned | count) == 1782 
+                                    and  
+                                 toscalar(QueenOfTheSky | count) <= 0      
+                                    ,'MessageId=200:Severity=Success:MessageText=All set! Clear for takeoff'
+                                    ,'MessageId=909:Severity=Critical:MessageText=Unknown error'
+                                )
+| parse-kv MyTowerClearance as (MessageId: int, Severity:string , MessageText:string )  with (pair_delimiter=':', kv_delimiter='=') 
+| project-away MyTowerClearance                              
+
+// == 1 - Clear the table before running the demo ===============================================
+// ==============================================================================================
+// == Careful with this command, it deletes all data in that table.
+// ==============================================================================================
+.clear table QueenOfTheSky data 
+// ==============================================================================================
+
+// == 2- Run the notebook here 
+// == https://msit.powerbi.com/groups/3582b164-c42f-4707-98ac-a85e3bf6a734/synapsenotebooks/441a7079-2ada-4cef-a077-f26064fa7db1?experience=kusto
+// == It's a good idea to refresh the notebook UI to make sure to grab a fresh spark session
+// == when you see Logs at the bottom counting the rows that have been sent, you can open the report here to view the movement. 
+// == https://msit.powerbi.com/groups/3582b164-c42f-4707-98ac-a85e3bf6a734/reports/a279ca72-f88f-415c-9145-19a4fbe2ff2f/ReportSection2af561f0e9468605b7aa?experience=power-bi
+
+
+
+
+
