@@ -27,13 +27,13 @@ On February 1st, 2023, something very special happened in Everett, WA. Atlas Air
    - [Run the report](#run-the-report)
 
 ## Prepare a text file for your important parameters
-We will need to capture many parameters that will ne needed later in this project. We will ask you to save this in a text file as you follow along.
+We will need to capture many parameters that will be needed later in this project. We will ask you to save this in a text file as you follow along.
 
 [^ Table of content ^](#table-of-content)
 
 ## Create a KQL database and KQL Queryset
 
-1. Ensure you asre in the real time analytics experience by clicking the experience picker in the lower left corner and selecting Real-Time Analytics
+1. Ensure you are in the real time analytics experience by clicking the experience picker in the lower left corner and selecting Real-Time Analytics
 1. Click the "KQL database" button at the top of the screen
 1. Name your database: ***QueenOfTheSkies*** 
 1. On the main page of the KQL Database, note the Query URI with a dedicated button to copy the URI. Click this button and **Save the Query URI AND the Database name to your Param file.**
@@ -49,7 +49,6 @@ We will need to capture many parameters that will ne needed later in this projec
 1. From this repo copy and paste the content of the KQL scripts found in [the repo](./Code/KQL/) to their corresponding tabs in the KQL Queryset
 
 ### Run the database preparation script
-
 1. Run the code contained in the ***QoS DDL*** script
 1. Ensure all operation are successful
 
@@ -82,7 +81,6 @@ The next steps will create the lakehouse where we will host the sample file and 
 1. Name your lakehouse ***QoS_LH***
 
 ### Upload the sample file
-
 1. In the Lakehouse menu, ***Right click*** on ***Files*** and then select ***Upload*** and finally ***Upload files***
 1. Use the folder button to navigate to where you saved the ***QueenOfTheSky_ex.csv*** file on your local machine and hit ***Open*** 
 1. Click ***Upload***
