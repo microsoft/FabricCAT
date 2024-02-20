@@ -2,6 +2,10 @@
 
 This demo will allow you to leverage the elements of Fabric Real-Time Analytics to showcase a powerful demo with a compeling story.
 
+|:information_source: **Information** |
+|:---------------------------|
+| **You can download the different files for the demo as stated in the steps below. To get everything in one single step just clone the FabricCAT repo to your local machine.**|
+
 ## Demo backstory
 
 On February 1st, 2023, something very special happened in Everett, WA. Atlas Air, a well-known cargo plane operator, took delivery of a new airplane. Only this plane happens to be the last of the Boeing 747 that will ever be made.
@@ -31,6 +35,10 @@ On February 1st, 2023, something very special happened in Everett, WA. Atlas Air
 ## Prepare a text file for your important parameters
 
 We will need to capture many parameters that will ne needed later in this project. We will ask you to save this in a text file as you follow along.
+
+|:information_source: **Information** |
+|:---------------------------|
+| **The parameter file does not have a special format, it is just a textfile you can store different parameters in that you copy along the way from the portal.**|
 
 [^ Table of content ^](#table-of-content)
 
