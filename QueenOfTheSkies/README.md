@@ -298,22 +298,52 @@ Rows remaining in the stream: 134*
 ### Create a KQL database destination
 
 1. With the stream active, navigate back to your ***QoS_ES*** Event Stream.
-1. Click the ***New Destination*** button and select ***KQL Database***
-1. Select ***Direct Ingestion*** 
-1. Name your destination ***QoS_KQLDb_Dest***
-1. Select the workspace you are working in
-1. Select the ***QueenOfTheSkies*** KQL database and hit ***Add and Configure***
 
+   ![navigate back to event stream](./images/image-050.png)
+
+2. Click the ***New Destination*** button and select ***KQL Database***
+
+   ![New Destination](./images/image-050.png)
+
+3. Select ***Direct Ingestion***
+
+   ![Direct Ingestion](./images/image-052.png)
+
+4. Name your destination ***QoS_KQLDb_Dest***
+
+   ![Name your destination](./images/image-053.png)
+
+5. Select the workspace you are working in. In our example it is `Queen of the Sky`.
+
+   ![Select the workspace](./images/image-054.png)
+
+6. Select the ***QueenOfTheSkies*** KQL database and hit ***Add and Configure***
+
+   ![Add and Configure Database](./images/image-055.png)
 
 #### Complete the data mapping
 
 Now you must complete the data mapping.
 
-1. Click the ***QueenOfTheSky*** table 
-1. Leave the connection name as is or choose your own and hit ***Next***
-1. On the next screen immediatly switch the format to ***JSON*** and hit the *** advanced button***
-1. Select ***Existing mapping** and choose the ***QueenOfTheSky_mapping*** element in the drop down.
-1. Click ***Finish***
+1. Click the ***QueenOfTheSky*** table.
+
+   ![Click QoS Table](./images/image-056.png)
+
+2. Leave the connection name as is or choose your own and hit ***Next***
+
+   ![Click Next](./images/image-057.png)
+
+3. On the next screen immediatly switch the format to ***JSON*** and hit the button ***Advanced***
+
+   ![choose JSON and click Advances](./images/image-058.png)
+
+4. Select ***Existing mapping*** and choose the ***QueenOfTheSky_mapping*** element in the drop down.
+
+   ![Choose Mapping](./images/image-059.png)
+
+5. Click ***Finish***
+
+   ![Finish](./images/image-060.png)
 
 **Congratulation!** you are now able to stream any CSV file to a KQL database!
 
@@ -321,31 +351,69 @@ Now you must complete the data mapping.
 
 ## Build the Power BI report
 
-1. Download the Power BI template document (.PBIT) from the repo here and ***Save it to your local drive***
-1. Open the PBIT file and wait for it to prompt you for the parameters
-1. It should prompt you for two parameters
-   1. ***MyQueryUri*** is the URI of your KQL db that you saved in your param file. 
-   1. ***MyDatabaseName*** is the name you chose originally for the database.
-1. Click ***Load*** and allow the report to connect and load data
-1. It may require you to sign in to authenticate if not done already
-1. ***Publish the report*** to your workspace
+1. Download the Power BI template document (.PBIT) from the repo here and ***Save it to your local drive***. If you cloned the Git Hub Repository you will find the Power BI Report in folder `Code/PBI`.
+
+2. Open the PBIT file and wait for it to prompt you for the parameters
+
+3. It should prompt you for two parameters
+   1. ***MyQueryUri*** is the URI of your KQL db that you saved in your param file.
+   2. ***MyDatabaseName*** is the name you chose originally for the database.
+
+14 Click ***Load*** and allow the report to connect and load data
+
+   ![click on load](./images/image-061.png)
+
+4.It may require you to sign in to authenticate if not done already
+
+   ![authenticate](./images/image-062.png)
+
+5.***Publish the report*** to your workspace
+
+   ![publish the report](./images/image-063.png)
 
 [^ Table of content ^](#table-of-content)
+
 ## Run the demo
+
 1. Navigate back to the ***QoS_KQS*** KQL Query Set and to the ***QoS_DemoControl*** tab
-1. Run the Clear table command to clean up the landing table
-1. Run the ***Pre flight query** (see below) 
-1. The result should be a *All set! Clear for takeoff* message
+
+   ![Navigate back to query set](./images/image-064.png)
+
+2. Run the Clear table command to clean up the landing table
+
+   ![clear table](./images/image-065.png)
+
+3. Run the ***Pre flight query** (see below)
+
+4. The result should be a *All set! Clear for takeoff* message
+
+   ![Result is OK](./images/image-066.png)
 
 ### Start the notebook
+
 1. Navigate back to the ***QueenOfTheSkies_Notebook***
-1. Click ***Run all*** 
-1. Wait for the Logs at the bottom to show data streaming
+
+   ![Open Notebook](./images/image-067.png)
+
+2. Click ***Run all***
+
+   ![click on run all](./images/image-068.png)
+
+3. Wait for the Logs at the bottom to show data streaming
+
+   ![wait for logs](./images/image-069.png)
 
 ### Run the report
+
 1. Navigate to the ***QueenOfTheSky_rpt*** power BI report
-1. To set the tone, read the text from the landing page
-1. Then navigate to the second page to see the flight path. Note that until you start refreshing the path will not change. Don't wait too long or else the punchline will be spoiled
+
+   ![Open PowerBI Report](./images/image-070.png)
+
+2. To set the tone, read the text from the landing page
+
+3. Then navigate to the second page to see the flight path. Note that until you start refreshing the path will not change. Don't wait too long or else the punchline will be spoiled
+
+   ![Flight path](./images/image-071.png)
 
 [^ Table of content ^](#table-of-content)
 
