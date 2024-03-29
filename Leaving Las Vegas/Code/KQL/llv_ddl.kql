@@ -1,0 +1,33 @@
+.execute database script  <|
+.create-merge table LeavingLasVegas (CallSign:string, TimeStamp:datetime, FlightTrackLon:real, FlightTrackLat:real) with (folder = "Data.Gold") 
+.create-or-alter table LeavingLasVegas ingestion csv mapping 'LeavingLasVegas_mapping'
+```
+[{"Properties":{"Ordinal":"0"},"column":"CallSign","datatype":""},{"Properties":{"Ordinal":"1"},"column":"TimeStamp","datatype":""},{"Properties":{"Ordinal":"2"},"column":"FlightTrackLon","datatype":""},{"Properties":{"Ordinal":"3"},"column":"FlightTrackLat","datatype":""}]
+```
+.create-or-alter table LeavingLasVegas ingestion json mapping 'LeavingLasVegas_json_mapping'
+```
+[{"Properties":{"Path":"$['CallSign']"},"column":"CallSign","datatype":""},{"Properties":{"Path":"$['TimeStamp']"},"column":"TimeStamp","datatype":""},{"Properties":{"Path":"$['FlightTrackLon']"},"column":"FlightTrackLon","datatype":""},{"Properties":{"Path":"$['FlightTrackLat']"},"column":"FlightTrackLat","datatype":""}]
+```
+.ingest async into table LeavingLasVegas ('YourPathToTheDataFolder/NKS flights.csv.gz;impersonate') 
+with (format='csv',ingestionMappingReference='LeavingLasVegas_mapping',ingestionMappingType='csv', ignoreFirstRecord ='true')
+//
+.create-merge table FlightInformationRegions (RegionId:guid, RegionCode:string, RegionName:string, IcaoDesignator:string, FirName:string, FirType:string, FirDisplayName:string, FirLowerCeiling:long, FirUpperCeiling:long, FirPolygon:dynamic, FirGeoJson:dynamic, FirWkt:string) with (folder = "Data.Reference") 
+.create-or-alter table FlightInformationRegions ingestion csv mapping 'FlightInformationRegions_mapping'
+```
+[{"Properties":{"Ordinal":"0"},"column":"RegionId","datatype":""},{"Properties":{"Ordinal":"1"},"column":"RegionCode","datatype":""},{"Properties":{"Ordinal":"2"},"column":"RegionName","datatype":""},{"Properties":{"Ordinal":"3"},"column":"IcaoDesignator","datatype":""},{"Properties":{"Ordinal":"4"},"column":"FirName","datatype":""},{"Properties":{"Ordinal":"5"},"column":"FirType","datatype":""},{"Properties":{"Ordinal":"6"},"column":"FirDisplayName","datatype":""},{"Properties":{"Ordinal":"7"},"column":"FirLowerCeiling","datatype":""},{"Properties":{"Ordinal":"8"},"column":"FirUpperCeiling","datatype":""},{"Properties":{"Ordinal":"9"},"column":"FirPolygon","datatype":""},{"Properties":{"Ordinal":"10"},"column":"FirGeoJson","datatype":""},{"Properties":{"Ordinal":"11"},"column":"FirWkt","datatype":""}]
+```
+.create-merge table FlightInformationRegionsS2 (RegionId:guid, RegionCode:string, RegionName:string, IcaoDesignator:string, FirName:string, FirType:string, FirDisplayName:string, FirLowerCeiling:long, FirUpperCeiling:long, FirPolygon:dynamic, FirGeoJson:dynamic, FirWkt:string, FirS2Coverage:string) with (folder = "Data.Reference") 
+.create-merge table noNKS71 (CallSign:string, TimeStamp:string, FlightTrackLon:string, FlightTrackLat:string, EventProcessedUtcTime:datetime, PartitionId:long, EventEnqueuedUtcTime:datetime) 
+.create-or-alter function with (folder = "Data.Transformation", docstring = "Update policy function to generate Flight information regions s2 cell coverage", skipvalidation = "true") 
+upf_ComputeFirS2Coverage() 
+{
+    let MyS2CellResolution = 8; // 8 is the most precise we can get without busting the dynamic size limit.
+    FlightInformationRegions
+    | extend FirS2Coverage = geo_polygon_to_s2cells(FirPolygon,MyS2CellResolution)
+    | mv-expand FirS2Coverage to typeof(string)
+}
+.alter table FlightInformationRegionsS2 policy update "[{\"IsEnabled\":true,\"Source\":\"FlightInformationRegions\",\"Query\":\"upf_ComputeFirS2Coverage\",\"IsTransactional\":false,\"PropagateIngestionProperties\":true,\"ManagedIdentity\":null}]"
+// Now we ingest the file
+.ingest async into table FlightInformationRegions ('YourPathToTheReferenceFolder/FlightInformationRegions.tsv.gz;impersonate') 
+with (format='tsv',ingestionMappingReference='FlightInformationRegions_mapping',ingestionMappingType='csv', ignoreFirstRecord ='true')
+
