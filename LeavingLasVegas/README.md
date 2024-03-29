@@ -196,13 +196,13 @@ Here we will create a data activator reflex that will trigger whenever a flight 
 18.	Create a ***new Reflex*** and name it ***Reflex_Lat***.
 19.	Select ***Save***.
 20.	Open the Reflex that you just created. Using the ***Open item*** link
-Give Object name ***Lat_Notify***. Select key column as ***Callsign***.
-21.	Click ***Save***. And then ***Save and go to design mode***.
-22.	Click on ***New Trigger***. And select ***FlightTrackLat***
-23.	Choose ***Detect condition*** to be Becomes ***Less than*** and specify value ***30***.
-24.	Select ***Action*** as ***Teams message***.
-25.	***Set your Headline message*** to ***“Flight number @Callsign, breached latitude 30 degree at @timeStamp”*** .
-26.	***Save*** & ***Start*** the trigger.
+Give Object name ***Lat_Notify***. Select key column as ***Callsign***. Assign properties for ***FlightTrackLat*** and ***FlightTrackLon*** .
+22.	Click ***Save***. And then ***Save and go to design mode***.
+23.	Click on ***New Trigger***. And select ***FlightTrackLat***
+24.	Choose ***Detect condition*** to be ***Becomes Less than*** and specify value ***30***.
+25.	Select ***Action*** as ***Teams message***.
+26.	***Set your Headline message*** to ***“Flight number @Callsign, breached latitude 30 degree at @timeStamp”*** .
+27.	***Save*** & ***Start*** the trigger.
 
 [^ Table of content ^](#table-of-content)
 
