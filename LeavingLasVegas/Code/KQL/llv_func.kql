@@ -1,0 +1,18 @@
+.execute database script  <|
+.set-or-append FlightHexes with (folder = "Data.Reference") <|
+LeavingLasVegas
+| distinct CallSign
+| extend FlightHex = strcat('#',tohex(toint(rand(256)),2),tohex(toint(rand(256)),2),tohex(toint(rand(256)),2)) 
+// 
+.create-or-alter function with (folder="Visualization", docstring="A function that converts a flight path to a WKT linestring for PBI to render") 
+DrawLeavingLasVegas() {
+LeavingLasVegas
+| sort by CallSign, TimeStamp asc
+| extend lon = round(FlightTrackLon,4), lat = round(FlightTrackLat,4)
+| summarize lon=max(lon), lat=max(lat) by CallSign, bin(TimeStamp,53s)
+| extend MyTupple = strcat(tostring(lon), " ",tostring(lat))
+| summarize MyFlightPath = make_list(MyTupple) by CallSign
+| extend MyFlightPath = strcat("LINESTRING ",replace_string(replace_string(replace_string(tostring(MyFlightPath),"[","("),"]",")"),'"',""))
+| extend SomeValue = 1
+| lookup FlightHexes on CallSign
+}

@@ -1,0 +1,116 @@
+// Let's see the list of flight and find a big one
+LeavingLasVegas
+| summarize DataPointsCount = count() by CallSign 
+| order by DataPointsCount desc 
+// NSK954 looks good!
+
+// Let's see the result of our Event stream filter
+noNKS71
+| where CallSign =="NKS71"
+
+//Let's quickly visualize the flight path using  a scatterchart
+LeavingLasVegas
+| where CallSign == 'NKS954'
+| render scatterchart with(kind=map)
+// This is a Flight from Las Vegas (LAS) to fort Lauderdale, Florida (FLL)
+// https://www.flightaware.com/live/flight/NKS954
+
+// Let's see what the power bi report will look like for the flight
+DrawLeavingLasVegas
+| where CallSign == 'NKS954'
+
+// Let's dig into a powerful query. This will take a specific flight and calculate the exact list of Flight Information Regions 
+// that it crossed and the precise entry and exit time. This is useful information for civil aviation authorities such as the FAA
+let MyCallSign = 'NKS954';
+let MyRegions = 
+    toscalar(
+        LeavingLasVegas 
+        | where CallSign == MyCallSign
+        | extend Mys2cell = geo_point_to_s2cell(FlightTrackLon,FlightTrackLat,8)
+        | lookup FlightInformationRegionsS2 on $left.Mys2cell == $right.FirS2Coverage
+        | where FirType != "UIR" // Removing the upper regions to simplify the demo
+        | distinct CallSign, RegionId
+        | summarize MyRegions = make_set(RegionId) by CallSign
+        | project MyRegions
+);
+// I need to know how many items are in the array to use this as my "stop condition" later when I check each region
+let ArraySize = array_length(MyRegions);
+// for the CallSign, I am packing Time, lon, lat and altidude so a spacetime coordinate set
+let MySpaceTimeCoordinatesList = 
+    toscalar (
+        LeavingLasVegas
+        | where CallSign == MyCallSign
+        | extend MyCoordinates = pack_array(FlightTrackLon, FlightTrackLat)
+        | project CallSign, TimeStamp, MySpaceTimeCoordinates = pack_array(TimeStamp, FlightTrackLon,FlightTrackLat)
+        | summarize MySpaceTimeCoordinatesList = make_list(pack_array(MySpaceTimeCoordinates)) by CallSign
+        | project MySpaceTimeCoordinatesList
+);
+// I need a table with one row per region. I know the "MyRegions" variable is an array that has one element per flight region
+// Therefore the array size must be equal to the number of regions crossed. Now I need a table that has a row number for each
+// row and I will start adding more columns based on that index. I use the array size with the range operator to build the table dynamically
+range FirIndex from 0 to ArraySize-1 step 1
+// using the myRegion Array, I use the index from the Range operator to get the right FirName and make that a column
+| extend RegionId = toguid(tostring(MyRegions.[FirIndex]))
+// This second extend just brings the spacetime coordinates to each record so we can check them all against the FIR polygon
+| extend MySpaceTimeCoordinates = MySpaceTimeCoordinatesList
+// joining to the MyFlightInformationRegions ref table to get the polygons and the altitude ceilings
+| join kind=inner FlightInformationRegions on $left.RegionId == $right.RegionId
+// Projecting the fields I need to analyse the coordinates
+| project RegionId, FirIndex, FirDisplayName, MySpaceTimeCoordinates , FirPolygon, FirLowerCeiling, FirUpperCeiling
+// using mv-apply to apply the logic to the set of coordinates for every record
+| mv-apply MySpaceTimeCoordinates on
+(
+extend
+    // Getting the columns I need (x = lon, y = lat, z = altidude, t= time)
+      CallSign        = MyCallSign  // getting the call sign as our anchor
+     ,t        = todatetime(MySpaceTimeCoordinates.[0]) // extracting the TimeStamp
+     ,x        = toreal(MySpaceTimeCoordinates.[1]) // extracting the Longitude
+     ,y        = toreal(MySpaceTimeCoordinates.[2]) // extracting the Latitude
+     // the next two columns are booleans that will allow us to place the Spacetime coordinates in the right 3d space (i.e the region)
+| extend
+      IsInRegion      = geo_point_in_polygon(x,y,FirPolygon) // checking if the lat and lon are in the FIR polygon
+     )
+// projecting the columns I want to see
+| project RegionId,FirDisplayName, CallSign, TimeStamp=t, lon=x, lat=y, IsInRegion
+// only keeping the coordinates that are in the right region of 3d space
+| where IsInRegion == true 
+// the min TimeStamp and max timestamp are repectively the entry and exit out of a region
+| summarize FirEntry = min(TimeStamp), FirExit = max(TimeStamp) by CallSign, FirDisplayName, RegionId
+// ordering my chronological order for viewing
+| order by FirEntry asc
+
+// The below is used to create a GeoJson representation of the regions crossed and the flight track 
+// overlayed. We can use this to view the result on GeoJson.io This website is great for quickly visualizing 
+// GeoJson information.
+let myFirs = dynamic(
+                        [
+                             '(KZLA) Los Angeles FIR'
+                            ,'(KZAB) Albuquerque FIR'
+                            ,'(KZFW) Fort Worth FIR'
+                            ,'(KZHU) Houston FIR'
+                            ,'(KZJX) Jacksonville FIR'
+                            ,'(KZMA) Miami FIR/UIR'
+                        ]
+                    )
+                    ;
+let MyFlightTrack = 
+LeavingLasVegas
+| where CallSign == 'NKS954'
+| extend lon = round(FlightTrackLon,5), lat= round(FlightTrackLat,5)
+| extend MyCoordinates = pack_array(round(lon,5), round(lat,5))
+| project CallSign, TimeStamp, MyCoordinates
+| order by TimeStamp asc
+| summarize MyCoordinatesList = make_list(pack_array(MyCoordinates)) by CallSign
+| extend MyFlightProperties = bag_pack("CallSign",CallSign)
+| extend MyPolygon = bag_pack("coordinates",MyCoordinatesList,"type","LineString")
+| extend MyFeature = bag_pack("type","Feature","properties",MyFlightProperties,"geometry",MyPolygon)
+| project MyFeature
+;
+FlightInformationRegions
+| where FirDisplayName in (myFirs)
+| project MyFeature = FirGeoJson
+| union MyFlightTrack
+| summarize MyColl=make_list(MyFeature)
+| project MyFeatureColl = bag_pack("type","FeatureCollection","features",MyColl)
+
+

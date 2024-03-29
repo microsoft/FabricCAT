@@ -1,0 +1,10 @@
+// Clean main data
+.execute database script  <|
+.clear table LeavingLasVegas data 
+.clear table noNKS71 data 
+
+//Clean Reference data
+.execute database script  <|
+.clear table FlightInformationRegions data
+.clear table FlightInformationRegionsS2 data 
+.clear table FlightHexes data
